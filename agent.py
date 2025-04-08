@@ -1,5 +1,3 @@
-#https://docs.livekit.io/agents/voice-agent/voice-pipeline/
-#from the template
 import logging
 
 from dotenv import load_dotenv
@@ -18,6 +16,7 @@ from livekit.plugins import cartesia, openai, deepgram, silero, turn_detector, e
 load_dotenv(dotenv_path=".env.local")
 logger = logging.getLogger("voice-agent")
 
+
 def prewarm(proc: JobProcess):
     proc.userdata["vad"] = silero.VAD.load()
 
@@ -29,7 +28,7 @@ async def entrypoint(ctx: JobContext):
             "Your name is Jack. You are 36 years old. You can speak French. You are a French tutor."
             "you help English speaking people to practice French conversation. Their French levels are A1, A2, B1, B2. "
             "Use simple, short, conversational responses, ask back questions to continue practicing French. "
-            "don't use more than 4 sentences in your answer. don't use unpronouncable punctuation or moji."
+            "don't use more than 4 sentences in your answer. don't use unpronouncable punctuation or mojis."
         ),
     )
 
@@ -40,27 +39,18 @@ async def entrypoint(ctx: JobContext):
     participant = await ctx.wait_for_participant()
     logger.info(f"starting voice assistant for participant {participant.identity}")
 
-    # This project is configured to use Deepgram STT, OpenAI LLM and Cartesia TTS plugins
-    # Other great providers exist like Cerebras, ElevenLabs, Groq, Play.ht, Rime, and more
-    # Learn more and pick the best one for your app:
-    # https://docs.livekit.io/agents/plugins
+
     agent = VoicePipelineAgent(
         vad=ctx.proc.userdata["vad"],
 
-        #STT  
-        #stt=openai.STT(language="fr",  model="whisper-1"),
+        #STT
         stt=openai.STT.with_groq(model="whisper-large-v3"),
 
         #LLM
-        #llm=openai.LLM(model="gpt-4o-mini"),
         llm=openai.LLM.with_groq(model="gemma2-9b-it"),
 
         #TTS
-        tts=openai.TTS(voice="echo"), 
-
-        #tts=elevenlabs.TTS(voice=elevenlabs.tts.Voice( id="pNInz6obpgDQGcFmaJgB", name="Adam",\
-        #tts=elevenlabs.TTS(voice=elevenlabs.tts.Voice( id="EXAVITQu4vr4xnSDxMaL", name="Bella",                                              
-        #category="premade"), model="eleven_multilingual_v2"),
+        tts=openai.TTS(model="kokoro", voice="ff_siwis", api_key="not-needed", base_url="http://localhost:8880/v1"),
 
         turn_detector=turn_detector.EOUModel(),
         # minimum delay for endpointing, used when turn detector believes the user is done with their turn
